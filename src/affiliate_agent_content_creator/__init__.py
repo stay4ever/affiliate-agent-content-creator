@@ -1,0 +1,5 @@
+"""ContentCreator - AI-powered SEO content generation agent for affiliate marketing."""
+__version__ = "0.1.0"
+AGENT_NAME = "ContentCreator"
+AGENT_DESCRIPTION = "Generates SEO-optimized affiliate marketing content"
+PRICE_PER_RUN = "$1.00 - $3.00"

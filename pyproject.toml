@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "affiliate-agent-content-creator"
+version = "0.1.0"
+description = "AI-powered SEO content generation agent for affiliate marketing"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [
+    { name = "stay4ever" },
+]
+keywords = [
+    "affiliate-marketing",
+    "content-generation",
+    "seo",
+    "copywriting",
+    "ai-agent",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Office/Business",
+]
+dependencies = [
+    "affiliate-agent-core>=0.1.0",
+]
+
+[project.scripts]
+content-creator = "affiliate_agent_content_creator.entry:main"
+
+[project.urls]
+Homepage = "https://github.com/stay4ever/affiliate-agent-content-creator"
+Repository = "https://github.com/stay4ever/affiliate-agent-content-creator"
+Issues = "https://github.com/stay4ever/affiliate-agent-content-creator/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/affiliate_agent_content_creator"]

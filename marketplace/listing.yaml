@@ -1,0 +1,34 @@
+name: ContentCreator
+tagline: "Generate SEO-optimized affiliate marketing content automatically"
+description: |
+  ContentCreator is an autonomous AI agent that writes professional affiliate marketing
+  content. It generates product reviews, comparisons, buying guides, how-to articles,
+  listicles, and roundups - all optimized for search engines and conversions.
+category: Marketing
+tags: [affiliate-marketing, content-generation, seo, copywriting, reviews]
+pricing:
+  model: per_run
+  estimated_cost: "$1.00 - $3.00 per run"
+  billing: "Charged per API usage"
+capabilities:
+  - 6 content types (review, comparison, buying_guide, how_to, listicle, roundup)
+  - Structured content briefs with section templates
+  - SEO optimization with keyword density analysis
+  - FTC-compliant affiliate disclosures
+  - Automatic meta title and description generation
+inputs:
+  - name: topic
+    type: string
+    required: true
+  - name: content_type
+    type: string
+    required: false
+    default: review
+    options: [review, comparison, buying_guide, how_to, listicle, roundup]
+  - name: keyword
+    type: string
+    required: true
+outputs:
+  - "Complete Markdown article (1500-4500 words depending on type)"
+  - "SEO optimization report"
+github: "https://github.com/stay4ever/affiliate-agent-content-creator"
