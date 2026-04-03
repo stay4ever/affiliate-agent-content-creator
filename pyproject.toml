@@ -30,7 +30,19 @@ classifiers = [
     "Topic :: Office/Business",
 ]
 dependencies = [
-    "affiliate-agent-core>=0.1.0",
+    "anthropic>=0.25",
+    "click>=8.1",
+    "aiofiles>=23.0",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.4",
+    "mypy>=1.10",
+    "types-aiofiles>=23.0",
 ]
 
 [project.scripts]
@@ -43,3 +55,35 @@ Issues = "https://github.com/stay4ever/affiliate-agent-content-creator/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/affiliate_agent_content_creator"]
+
+# ---------------------------------------------------------------------------
+# Ruff — linting & formatting
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "ANN"]
+ignore = ["ANN101", "ANN102"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["ANN"]
+
+# ---------------------------------------------------------------------------
+# Mypy — type checking
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.11"
+packages = ["affiliate_agent_content_creator"]
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+# ---------------------------------------------------------------------------
+# Pytest
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
