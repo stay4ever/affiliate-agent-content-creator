@@ -48,6 +48,72 @@ print(result["article_path"])
 print(result["seo_report"])
 ```
 
+## Docker
+
+The recommended way to run ContentCreator in production is via Docker.
+The image is published to the GitHub Container Registry on every push to `main`.
+
+### Pull the latest image
+
+```bash
+docker pull ghcr.io/stay4ever/affiliate-agent-content-creator:latest
+```
+
+### Run with Docker
+
+```bash
+docker run --rm \
+  --env ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
+  --env ANTHROPIC_MODEL="claude-haiku-4-5" \
+  -v "$(pwd)/output:/app/output" \
+  ghcr.io/stay4ever/affiliate-agent-content-creator:latest \
+  "Best Running Shoes 2025" --type buying_guide
+```
+
+**Key flags:**
+- `--env ANTHROPIC_API_KEY` — required; never bake this into the image
+- `-v "$(pwd)/output:/app/output"` — mount a host directory to persist generated Markdown files
+- `--env ANTHROPIC_MODEL` — optional; defaults to `claude-haiku-4-5`
+
+### Run with Docker Compose
+
+```bash
+# 1. Copy the example environment file and fill in your API key
+cp .env.example .env
+# Edit .env and set ANTHROPIC_API_KEY=sk-ant-...
+
+# 2. Start the agent
+docker compose run --rm affiliate-agent "Best Wireless Headphones 2026" --type roundup
+```
+
+### Build the image locally
+
+```bash
+docker build -t affiliate-agent .
+docker run --rm \
+  -e ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
+  -v "$(pwd)/output:/app/output" \
+  affiliate-agent "Sony WH-1000XM5" --type review
+```
+
+### Environment variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `ANTHROPIC_API_KEY` | ✅ Yes | — | Your Anthropic API key |
+| `ANTHROPIC_MODEL` | No | `claude-haiku-4-5` | Model to use for generation |
+| `ANTHROPIC_MAX_TOKENS` | No | `8192` | Global token ceiling per call |
+| `ANTHROPIC_MAX_TOKENS_REVIEW` | No | — | Per-type override for reviews |
+| `ANTHROPIC_MAX_TOKENS_BUYING_GUIDE` | No | — | Per-type override for buying guides |
+| `ANTHROPIC_MAX_TOKENS_COMPARISON` | No | — | Per-type override for comparisons |
+| `ANTHROPIC_MAX_TOKENS_HOW_TO` | No | — | Per-type override for how-to guides |
+| `ANTHROPIC_MAX_TOKENS_LISTICLE` | No | — | Per-type override for listicles |
+| `ANTHROPIC_MAX_TOKENS_ROUNDUP` | No | — | Per-type override for roundups |
+| `CONTENT_OUTPUT_DIR` | No | `./output` | Directory for generated Markdown files |
+| `LOG_LEVEL` | No | `INFO` | Logging verbosity (`DEBUG` or `INFO`) |
+
+See `.env.example` for the full annotated reference.
+
 ## Supported Content Types
 
 | Type         | Word Count Range | Sections | Description                          |
