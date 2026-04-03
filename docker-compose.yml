@@ -1,6 +1,13 @@
 services:
   affiliate-agent:
     build: .
+    image: ghcr.io/stay4ever/affiliate-agent-content-creator:latest
+    restart: unless-stopped
     env_file: .env
     volumes:
       - ./output:/app/output
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
