@@ -1,0 +1,16 @@
+# ============================================================
+#  LOCKFILE — affiliate-agent-content-creator
+# ============================================================
+#  This file must be regenerated whenever pyproject.toml
+#  dependencies change. To regenerate, run:
+#
+#    pip install pip-tools
+#    pip-compile --generate-hashes pyproject.toml -o requirements.txt
+#
+#  Then commit the updated requirements.txt.
+#  The Dockerfile installs from this file with --require-hashes
+#  to guarantee reproducible, tamper-evident builds.
+# ============================================================
+#
+#  ⚠️  PLACEHOLDER — replace with output of pip-compile above.
+#
