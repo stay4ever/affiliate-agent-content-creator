@@ -11,16 +11,12 @@
 #  NEVER pass secrets via ENV in this file or bake them into
 #  the image. Always inject ANTHROPIC_API_KEY at run time via
 #  --env or your orchestrator's secrets manager.
-#
-#  NOTE: To further harden the base image, pin to an immutable
-#  digest after pulling locally:
-#    docker pull python:3.12.10-slim
-#    docker inspect python:3.12.10-slim --format '{{index .RepoDigests 0}}'
-#  Then replace the FROM line with:
-#    FROM python:3.12.10-slim@sha256:<digest> AS base
 # ============================================================
 
-FROM python:3.12.10-slim AS base
+# Base image pinned to immutable digest for supply-chain safety.
+# Tag: python:3.12.10-slim
+# To re-pin: docker pull python:3.12.10-slim && docker inspect --format '{{index .RepoDigests 0}}' python:3.12.10-slim
+FROM python:3.12.10-slim@sha256:4600f64a4f85916e73088e40e04c2f2a3e8e534fdfbe15fee0963fafc35bdf5c AS base
 
 # System hardening
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -33,17 +29,13 @@ WORKDIR /app
 # ── Builder stage: install dependencies ─────────────────────
 FROM base AS builder
 
-COPY pyproject.toml README.md LICENSE ./
+COPY requirements.txt pyproject.toml README.md LICENSE ./
 COPY src/ src/
 
-# Install the package and all runtime deps into a prefix we can copy.
-# TODO: Once you have committed a requirements.txt lockfile (generated
-# via `pip-compile --generate-hashes pyproject.toml -o requirements.txt`),
-# replace the lines below with:
-#   COPY requirements.txt .
-#   RUN pip install --no-cache-dir --prefix=/install --require-hashes -r requirements.txt && \
-#       pip install --no-cache-dir --prefix=/install --no-deps .
-RUN pip install --no-cache-dir --prefix=/install .
+# Install all dependencies from the hashed lockfile first (reproducible,
+# tamper-evident), then install the package itself without re-resolving deps.
+RUN pip install --no-cache-dir --prefix=/install --require-hashes -r requirements.txt && \
+    pip install --no-cache-dir --prefix=/install --no-deps .
 
 # ── Final stage: lean runtime image ─────────────────────────
 FROM base AS runtime
@@ -53,7 +45,7 @@ LABEL org.opencontainers.image.source="https://github.com/stay4ever/affiliate-ag
       org.opencontainers.image.licenses="MIT"
 
 # Create a non-root user for security.
-# Placed here — before COPY —  so this layer is cached independently
+# Placed here — before COPY — so this layer is cached independently
 # of dependency changes and is not invalidated on every pip update.
 RUN useradd --no-create-home --shell /bin/false appuser
 
@@ -76,11 +68,11 @@ USER appuser
 # HOME=/tmp is required because appuser was created with --no-create-home.
 RUN HOME=/tmp content-creator --help
 
-# Health check: validates that ANTHROPIC_API_KEY is present in the environment
-# before testing CLI import. A container with a missing/revoked key will be
-# correctly marked unhealthy by the orchestrator rather than serving traffic.
+# Health check: validates that ANTHROPIC_API_KEY is present at runtime.
+# Lightweight key-presence check avoids importing the full application on
+# every interval, preventing false unhealthy states as startup time grows.
 # HOME=/tmp prevents XDG path failures for the no-home appuser.
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD HOME=/tmp sh -c '[ -n "$ANTHROPIC_API_KEY" ] && content-creator --help'
+    CMD HOME=/tmp sh -c '[ -n "$ANTHROPIC_API_KEY" ]'
 
 ENTRYPOINT ["content-creator"]
