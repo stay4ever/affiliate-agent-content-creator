@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint & CVE Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install package + pip-audit
+        run: |
+          pip install --upgrade pip
+          pip install pip-audit
+          pip install -e .
+
+      - name: Audit dependencies for known CVEs
+        run: pip-audit
+
+  build-and-test:
+    name: Docker Build & Smoke Test
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t affiliate-agent:${{ github.sha }} .
+
+      - name: Smoke test — CLI entry-point is importable
+        run: |
+          docker run --rm \
+            -e ANTHROPIC_API_KEY=dummy \
+            affiliate-agent:${{ github.sha }} --help
