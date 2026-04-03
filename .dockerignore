@@ -1,0 +1,30 @@
+# ============================================================
+#  .dockerignore — affiliate-agent-content-creator
+# ============================================================
+#  Prevents unnecessary or sensitive files from being sent
+#  to the Docker daemon on every `docker build`, reducing
+#  build time and eliminating the risk of leaking secrets.
+# ============================================================
+
+# Secrets — never bake into image
+.env
+
+# Generated output — can be large, never needed at build time
+output/
+
+# Project assets not required by the build
+AffiliateAgent-Marketplace-Guide.pdf
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Git history
+.git/
+.gitignore
+
+# Docs & local config
+*.md
+docker-compose.yml
