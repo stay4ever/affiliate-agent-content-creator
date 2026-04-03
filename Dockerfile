@@ -4,7 +4,7 @@
 #  Build:  docker build -t affiliate-agent .
 #  Run:    docker run --rm \
 #            --env ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
-#            --env ANTHROPIC_MODEL="claude-opus-4-5" \
+#            --env ANTHROPIC_MODEL="claude-haiku-4-5" \
 #            -v "$(pwd)/output:/app/output" \
 #            affiliate-agent generate --topic "Best running shoes 2025"
 #
@@ -52,11 +52,13 @@ LABEL org.opencontainers.image.source="https://github.com/stay4ever/affiliate-ag
       org.opencontainers.image.version="0.1.0" \
       org.opencontainers.image.licenses="MIT"
 
+# Create a non-root user for security.
+# Placed here — before COPY —  so this layer is cached independently
+# of dependency changes and is not invalidated on every pip update.
+RUN useradd --no-create-home --shell /bin/false appuser
+
 # Copy only the installed artifacts from the builder
 COPY --from=builder /install /usr/local
-
-# Create a non-root user for security
-RUN useradd --no-create-home --shell /bin/false appuser
 
 # Output directory — mounted at run time; created here as a fallback
 ENV CONTENT_OUTPUT_DIR=/app/output \
@@ -74,8 +76,11 @@ USER appuser
 # HOME=/tmp is required because appuser was created with --no-create-home.
 RUN HOME=/tmp content-creator --help
 
-# Health check: same rationale — HOME=/tmp prevents XDG path failures.
+# Health check: validates that ANTHROPIC_API_KEY is present in the environment
+# before testing CLI import. A container with a missing/revoked key will be
+# correctly marked unhealthy by the orchestrator rather than serving traffic.
+# HOME=/tmp prevents XDG path failures for the no-home appuser.
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD HOME=/tmp content-creator --help
+    CMD HOME=/tmp sh -c '[ -n "$ANTHROPIC_API_KEY" ] && content-creator --help'
 
 ENTRYPOINT ["content-creator"]
