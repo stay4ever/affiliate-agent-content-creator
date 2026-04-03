@@ -1,9 +1,9 @@
 # ============================================================
 #  .dockerignore — affiliate-agent-content-creator
 # ============================================================
-#  Prevents unnecessary or sensitive files from being sent
-#  to the Docker daemon on every `docker build`, reducing
-#  build time and eliminating the risk of leaking secrets.
+#  Prevents secrets, generated output, and irrelevant files
+#  from being sent to the Docker build context, reducing build
+#  time and eliminating the risk of leaking secrets into the image.
 # ============================================================
 
 # Secrets — never bake into image
