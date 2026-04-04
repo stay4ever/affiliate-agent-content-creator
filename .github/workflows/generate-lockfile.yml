@@ -1,0 +1,41 @@
+name: Generate Lockfile
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "pyproject.toml"
+
+jobs:
+  generate-lockfile:
+    name: pip-compile --generate-hashes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pip-tools
+        run: pip install --upgrade pip pip-tools
+
+      - name: Compile locked requirements with hashes
+        run: |
+          pip-compile \
+            --generate-hashes \
+            --output-file requirements.txt \
+            pyproject.toml
+
+      - name: Commit updated requirements.txt
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: regenerate requirements.txt lockfile with hashes"
+          file_pattern: requirements.txt
+          commit_user_name: github-actions[bot]
+          commit_user_email: github-actions[bot]@users.noreply.github.com
