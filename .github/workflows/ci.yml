@@ -6,9 +6,26 @@ on:
   pull_request:
 
 jobs:
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog secret scan
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --only-verified
+
   lint:
     name: Lint & CVE Audit
     runs-on: ubuntu-latest
+    needs: secret-scan
     steps:
       - uses: actions/checkout@v4
 
@@ -16,11 +33,14 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install package + pip-audit
+      - name: Install package + audit tools
         run: |
           pip install --upgrade pip
-          pip install pip-audit
+          pip install pip-audit ruff
           pip install -e .
+
+      - name: Lint with ruff
+        run: ruff check src/
 
       - name: Audit dependencies for known CVEs
         run: pip-audit
@@ -29,6 +49,9 @@ jobs:
     name: Docker Build & Smoke Test
     runs-on: ubuntu-latest
     needs: lint
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
 
@@ -40,3 +63,21 @@ jobs:
           docker run --rm \
             -e ANTHROPIC_API_KEY=dummy \
             affiliate-agent:${{ github.sha }} --help
+
+      - name: Log in to GHCR
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag and push image to GHCR
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          docker tag affiliate-agent:${{ github.sha }} \
+            ghcr.io/stay4ever/affiliate-agent-content-creator:${{ github.sha }}
+          docker tag affiliate-agent:${{ github.sha }} \
+            ghcr.io/stay4ever/affiliate-agent-content-creator:latest
+          docker push ghcr.io/stay4ever/affiliate-agent-content-creator:${{ github.sha }}
+          docker push ghcr.io/stay4ever/affiliate-agent-content-creator:latest
